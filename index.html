@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบบันทึก UID</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding-top: 80px; background-color: #f4f4f4; }
+        .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: inline-block; margin: 0 20px; }
+        h2 { color: #333; }
+        #status { margin-top: 15px; color: #00B900; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 id="title">กำลังประมวลผล...</h2>
+        <p id="status">โปรดรอสักครู่ ระบบกำลังบันทึกข้อมูลของคุณ</p>
+    </div>
+
+    <script>
+        // TODO: ใส่ LIFF ID และ Web App URL (ที่ได้จาก Apps Script ล่าสุด)
+        const LIFF_ID = '2010674799-2HVyf02W'; 
+        const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzo8ayanXntfV_iTP7btr4xgaHP1ObxHB489npEsKjZGlN7ukUHFe85X2RZTPZ14iESQg/exec';
+
+        async function main() {
+            try {
+                await liff.init({ liffId: LIFF_ID });
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                } else {
+                    saveUidAutomatically();
+                }
+            } catch (err) {
+                document.getElementById('status').innerText = "Error: " + err.message;
+                document.getElementById('status').style.color = "red";
+            }
+        }
+
+        async function saveUidAutomatically() {
+            const titleText = document.getElementById('title');
+            const statusText = document.getElementById('status');
+
+            try {
+                const profile = await liff.getProfile();
+                
+                const response = await fetch(GAS_WEBAPP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ uid: profile.userId })
+                });
+
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    titleText.innerText = "บันทึกสำเร็จ!";
+                    statusText.innerText = "กำลังปิดหน้าต่างอัตโนมัติ...";
+                    setTimeout(() => liff.closeWindow(), 1500);
+                } else {
+                    titleText.innerText = "เกิดข้อผิดพลาด";
+                    statusText.innerText = "ไม่สามารถบันทึกข้อมูลได้";
+                    statusText.style.color = "red";
+                }
+            } catch (error) {
+                titleText.innerText = "เกิดข้อผิดพลาด";
+                statusText.innerText = "Error: " + error.message;
+                statusText.style.color = "red";
+            }
+        }
+
+        main();
+    </script>
+</body>
+</html>
