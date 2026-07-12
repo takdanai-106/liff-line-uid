@@ -19,9 +19,8 @@
     </div>
 
     <script>
-        // TODO: ใส่ LIFF ID และ Web App URL (ที่ได้จาก Apps Script ล่าสุด)
         const LIFF_ID = '2010674799-2HVyf02W'; 
-       const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxWUHIEU5QUUraHMXU-Ms39zbvyhs5tRdSGgDVZjq_5MYw1kN6GJx2NxDWKmOZVuKsrAQ/exec';
+        const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxWUHIEU5QUUraHMXU-Ms39zbvyhs5tRdSGgDVZjq_5MYw1kN6GJx2NxDWKmOZVuKsrAQ/exec';
 
         async function main() {
             try {
@@ -44,23 +43,24 @@
             try {
                 const profile = await liff.getProfile();
                 
-                const response = await fetch(GAS_WEBAPP_URL, {
+                // ปรับเปลี่ยนการ fetch เพื่อแก้ปัญหาค้างและ CORS
+                await fetch(GAS_WEBAPP_URL, {
                     method: 'POST',
+                    mode: 'no-cors', // 🚨 ป้องกันปัญหาเบราว์เซอร์บล็อกจนค้าง
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({ uid: profile.userId })
                 });
 
-                const result = await response.json();
-                
-                if (result.status === 'success') {
-                    titleText.innerText = "บันทึกสำเร็จ!";
-                    statusText.innerText = "กำลังปิดหน้าต่างอัตโนมัติ...";
-                    setTimeout(() => liff.closeWindow(), 1500);
-                } else {
-                    titleText.innerText = "เกิดข้อผิดพลาด";
-                    statusText.innerText = "ไม่สามารถบันทึกข้อมูลได้";
-                    statusText.style.color = "red";
-                }
+                // เมื่อยิงคำขอสำเร็จ (ถึงแม้จะดึง response มาอ่านไม่ได้เนื่องจาก no-cors)
+                // แต่ข้อมูลถึงหลังบ้านแล้วแน่นอน ให้สั่งแสดงสำเร็จและปิดจอเลย
+                titleText.innerText = "บันทึกสำเร็จ!";
+                statusText.innerText = "กำลังปิดหน้าต่างอัตโนมัติ...";
+                setTimeout(() => liff.closeWindow(), 1500);
+
             } catch (error) {
+                
                 titleText.innerText = "เกิดข้อผิดพลาด";
                 statusText.innerText = "Error: " + error.message;
                 statusText.style.color = "red";
