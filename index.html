@@ -6,9 +6,9 @@
     <title>ลงทะเบียนผู้ติดต่อ (Visitor Registration)</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f4f7f6; padding: 20px; display: flex; justify-content: center; }
-        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 100%; max-width: 400px; }
-        h2 { text-align: center; color: #333; margin-bottom: 24px; }
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f4f7f6; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 100%; max-width: 400px; box-sizing: border-box; }
+        h2 { text-align: center; color: #333; margin-bottom: 24px; margin-top: 0; }
         .form-group { margin-bottom: 16px; }
         label { display: block; margin-bottom: 6px; color: #666; font-size: 14px; }
         input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
@@ -44,9 +44,9 @@
 </div>
 
 <script>
-    // 🚨 แก้ไขเป็นข้อมูลของคุณ
+    // 🚨 แก้ไขข้อมูลตรงนี้ให้เป็นของคุณ
     const LIFF_ID = '2010674799-2HVyf02W'; 
-    const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbybd3wOA4lIO6fyuY4DkEHciGS2onJOp12agxjUXRuRbJoIQj-LBzdldrSWj_5UefP1/exec';
+    const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzIzp1G1zQ610uHEiDQiRwDe2k6zDlUVmbkvBWf6cV9QrHzaA8g4nQnTGddVXK0YLsh7w/exec';
     
     let userUid = '';
 
@@ -80,7 +80,7 @@
         };
 
         try {
-            // ส่งข้อมูลด้วย mode: 'no-cors' เพื่อไม่ให้ระบบค้างเติ่งจากความปลอดภัยเบราว์เซอร์
+            // ใช้ mode: 'no-cors' เพื่อส่งข้อมูลเข้า Google Script ได้ทันทีโดยหน้าเว็บไม่ค้างเติ่ง
             await fetch(GAS_WEBAPP_URL, {
                 method: 'POST',
                 mode: 'no-cors',
@@ -88,8 +88,8 @@
                 body: JSON.stringify(payload)
             });
 
-            // แจ้งสถานะและปิดหน้าต่างหลังส่งข้อมูลเสร็จสิ้น
             showStatus("ลงทะเบียนสำเร็จ! บอทกำลังส่ง QR Code...", "green");
+            // ปิดหน้าต่างแอปไลน์อัตโนมัติภายใน 2 วินาทีหลังจากลงทะเบียนเสร็จ
             setTimeout(() => { liff.closeWindow(); }, 2000);
 
         } catch (error) {
