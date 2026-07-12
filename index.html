@@ -3,71 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบบันทึก UID</title>
+    <title>ลงทะเบียนผู้ติดต่อ (Visitor Registration)</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; padding-top: 80px; background-color: #f4f4f4; }
-        .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: inline-block; margin: 0 20px; }
-        h2 { color: #333; }
-        #status { margin-top: 15px; color: #00B900; font-weight: bold; }
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f4f7f6; padding: 20px; display: flex; justify-content: center; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 100%; max-width: 400px; }
+        h2 { text-align: center; color: #333; margin-bottom: 24px; }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; margin-bottom: 6px; color: #666; font-size: 14px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 12px; background-color: #06C755; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button:disabled { background-color: #ccc; }
+        #statusMessage { text-align: center; margin-top: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2 id="title">กำลังประมวลผล...</h2>
-        <p id="status">โปรดรอสักครู่ ระบบกำลังบันทึกข้อมูลของคุณ</p>
-    </div>
 
-    <script>
-        const LIFF_ID = '2010674799-2HVyf02W'; 
-        const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwJLnJp1shThtWIK2WYVzYBJTyJH_RhYHLUF43jOML7ihjn4g0031KaKOksNPkgLpZ7IQ/exec';
+<div class="card">
+    <h2>ลงทะเบียนผู้ติดต่อ</h2>
+    <form id="regForm" onsubmit="submitForm(event)">
+        <div class="form-group">
+            <label>ชื่อ-นามสกุล</label>
+            <input type="text" id="fullname" required placeholder="ตัวอย่าง: นายสมชาย ใจดี">
+        </div>
+        <div class="form-group">
+            <label>วันที่เข้าพบ</label>
+            <input type="date" id="visitDate" required>
+        </div>
+        <div class="form-group">
+            <label>เวลาเริ่มเข้าพบ</label>
+            <input type="time" id="startTime" required>
+        </div>
+        <div class="form-group">
+            <label>เวลาสิ้นสุด</label>
+            <input type="time" id="endTime" required>
+        </div>
+        <button type="submit" id="submitBtn">ยืนยันการลงทะเบียน</button>
+    </form>
+    <div id="statusMessage"></div>
+</div>
 
-        async function main() {
-            try {
-                await liff.init({ liffId: LIFF_ID });
-                if (!liff.isLoggedIn()) {
-                    liff.login();
-                } else {
-                    saveUidAutomatically();
-                }
-            } catch (err) {
-                document.getElementById('status').innerText = "Error: " + err.message;
-                document.getElementById('status').style.color = "red";
-            }
-        }
+<script>
+    // 🚨 แก้ไขเป็นข้อมูลของคุณ
+    const LIFF_ID = '2010674799-2HVyf02W'; 
+    const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbybd3wOA4lIO6fyuY4DkEHciGS2onJOp12agxjUXRuRbJoIQj-LBzdldrSWj_5UefP1/exec';
+    
+    let userUid = '';
 
-        async function saveUidAutomatically() {
-            const titleText = document.getElementById('title');
-            const statusText = document.getElementById('status');
-
-            try {
+    async function main() {
+        try {
+            await liff.init({ liffId: LIFF_ID });
+            if (!liff.isLoggedIn()) {
+                liff.login();
+            } else {
                 const profile = await liff.getProfile();
-                
-                // ปรับเปลี่ยนการ fetch เพื่อแก้ปัญหาค้างและ CORS
-                await fetch(GAS_WEBAPP_URL, {
-                    method: 'POST',
-                    mode: 'no-cors', // 🚨 ป้องกันปัญหาเบราว์เซอร์บล็อกจนค้าง
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ uid: profile.userId })
-                });
-
-                // เมื่อยิงคำขอสำเร็จ (ถึงแม้จะดึง response มาอ่านไม่ได้เนื่องจาก no-cors)
-                // แต่ข้อมูลถึงหลังบ้านแล้วแน่นอน ให้สั่งแสดงสำเร็จและปิดจอเลย
-                titleText.innerText = "บันทึกสำเร็จ!";
-                statusText.innerText = "กำลังปิดหน้าต่างอัตโนมัติ...";
-                setTimeout(() => liff.closeWindow(), 1500);
-
-            } catch (error) {
-                
-                titleText.innerText = "เกิดข้อผิดพลาด";
-                statusText.innerText = "Error: " + error.message;
-                statusText.style.color = "red";
+                userUid = profile.userId;
             }
+        } catch (err) {
+            showStatus("เกิดข้อผิดพลาดในการโหลดระบบ: " + err.message, "red");
         }
+    }
 
-        main();
-    </script>
+    async function submitForm(event) {
+        event.preventDefault();
+        
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        showStatus("กำลังประมวลผล...", "#06C755");
+
+        const payload = {
+            uid: userUid,
+            name: document.getElementById('fullname').value,
+            date: document.getElementById('visitDate').value,
+            start: document.getElementById('startTime').value,
+            end: document.getElementById('endTime').value
+        };
+
+        try {
+            // ส่งข้อมูลด้วย mode: 'no-cors' เพื่อไม่ให้ระบบค้างเติ่งจากความปลอดภัยเบราว์เซอร์
+            await fetch(GAS_WEBAPP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            // แจ้งสถานะและปิดหน้าต่างหลังส่งข้อมูลเสร็จสิ้น
+            showStatus("ลงทะเบียนสำเร็จ! บอทกำลังส่ง QR Code...", "green");
+            setTimeout(() => { liff.closeWindow(); }, 2000);
+
+        } catch (error) {
+            showStatus("เกิดข้อผิดพลาด: " + error.message, "red");
+            submitBtn.disabled = false;
+        }
+    }
+
+    function showStatus(msg, color) {
+        const statusDiv = document.getElementById('statusMessage');
+        statusDiv.innerText = msg;
+        statusDiv.style.color = color;
+    }
+
+    main();
+</script>
 </body>
 </html>
